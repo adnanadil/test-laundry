@@ -12,6 +12,7 @@
   "dependencies": {
     "firebase": "^9.22.2",
     "react": "^18.2.0",
+    "react-barcode": "^1.4.6",
     "react-dom": "^18.2.0",
     "react-drag-drop-files": "^2.3.10",
     "react-webcam": "^7.1.1"

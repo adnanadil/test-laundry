@@ -2,10 +2,11 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import Webcam from "react-webcam";
 import "./My.css";
 import { FileUploader } from "react-drag-drop-files";
-
+// import Barcode from 'react-barcode';
+// import BarcodeReader from 'react-barcode-reader'
 
 import { ref, uploadBytes } from "firebase/storage";
-import {storage} from './firebase'
+import { storage } from "./firebase";
 const fileTypes = ["JPG", "PNG", "GIF"];
 
 const colors = ["red", "green", "yellow", "black", "blue"];
@@ -17,6 +18,8 @@ function App() {
   const [imgWidth, setImgWidth] = useState(3456);
   const [imgHeight, setImgHeight] = useState(2304);
   const [canvasImage, setCanvasImage] = useState(null);
+  const [tempBarcode, setTempBarcode] = useState('')
+
 
   const capture = useCallback(() => {
     const imageSrc = webcamRef.current.getScreenshot();
@@ -28,8 +31,8 @@ function App() {
   const [file, setFile] = useState();
   function handleChange(e) {
     console.log(e.target.files);
-    if (e.target.files[0] !== undefined){
-      console.log("We still come here")
+    if (e.target.files[0] !== undefined) {
+      console.log("We still come here");
       setFile(URL.createObjectURL(e.target.files[0]));
       autoLoadImage(URL.createObjectURL(e.target.files[0]));
     }
@@ -40,17 +43,15 @@ function App() {
     setFile(URL.createObjectURL(file));
   };
 
-
   // Uploading Image to cloud
   const uploadImage = async () => {
-    try{
+    try {
       const storageRef = ref(storage, `test/${file.name}`);
-     
 
       const image = canvasRef.current.toDataURL("image/png");
       const blob = await (await fetch(image)).blob();
       uploadBytes(storageRef, blob).then((snapshot) => {
-        console.log('Uploaded a blob or file!');
+        console.log("Uploaded a blob or file!");
       });
       // const blobURL = URL.createObjectURL(blob);
       // const link = document.createElement("a");
@@ -58,10 +59,10 @@ function App() {
       // // link.href = file;
       // link.download = "image.png";
       // link.click();
-    }catch(e){
-      console.log(e)
+    } catch (e) {
+      console.log(e);
     }
-  }
+  };
 
   const autoLoadImage = (showThis) => {
     var img1 = new Image();
@@ -88,6 +89,7 @@ function App() {
 
   const canvasRef = useRef(null);
   const ctx = useRef(null);
+  const barcodeInput = useRef(null);
 
   const [selectedColor, setSelectedColor] = useState(colors[0]);
   const [mouseDown, setMouseDown] = useState(false);
@@ -96,10 +98,22 @@ function App() {
     y: 0,
   });
 
+
+const [finalCode, setFinalCode] = useState('')
+
   useEffect(() => {
     if (canvasRef.current) {
       ctx.current = canvasRef.current.getContext("2d");
     }
+    // barcodeInput.current.addEventListener("keydown", (e) => {
+    //   // console.log(e.key);
+    //   // console.log(e.timeStamp);
+    //   if (e.keyCode === 13) {
+    //     console.log(tempBarcode)
+    //     setFinalCode(tempBarcode)
+    //     setTempBarcode('')
+    //   }
+    // });
   }, []);
 
   const draw = useCallback(
@@ -124,7 +138,7 @@ function App() {
   );
 
   const download = async () => {
-    try{
+    try {
       const image = canvasRef.current.toDataURL("image/png");
       const blob = await (await fetch(image)).blob();
       const blobURL = URL.createObjectURL(blob);
@@ -133,8 +147,8 @@ function App() {
       // link.href = file;
       link.download = "image.png";
       link.click();
-    }catch(e){
-      console.log(e)
+    } catch (e) {
+      console.log(e);
     }
   };
 
@@ -224,6 +238,29 @@ function App() {
     // facingMode: { exact: "environment" }
   };
 
+  const myFunction = () => {
+    barcodeInput.current.value = "";
+    barcodeInput.current.focus();
+  };
+
+  const [enterPressed, setEnterPressed] = useState(false)
+  const [nextTimeClearValue, setNextTimeClearValue] = useState(false)
+
+  const onChangeBarCode = (e) => {
+    console.log(e.target.value)
+    setTempBarcode(e.target.value)
+   }
+  
+   const saveBarcode = (e) => {
+    if(e.keyCode === 13){
+      setFinalCode(tempBarcode)
+      barcodeInput.current.value = ''
+      setTempBarcode("")
+      console.log("Enter is presses")
+    }
+    // enterPressed = false
+  }
+
   return (
     <div className="App">
       <canvas
@@ -232,7 +269,7 @@ function App() {
           allowTaint: true,
           foreignObjectRendering: true,
           width: 564,
-          height: 400
+          height: 400,
           // background: "https://images.unsplash.com/photo-1483232539664-d89822fb5d3e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cGhvdG8lMjBiYWNrZ3JvdW5kfGVufDB8fDB8fHww&w=1000&q=80"
         }}
         width={imgWidth}
@@ -268,8 +305,19 @@ function App() {
         // screenshotQuality={1}
       />
       <button onClick={capture}>Capture photo</button> */}
+      <input 
+        style={{ "width":"50px",}}
+        type="text" 
+        ref={barcodeInput} 
+        inputMode={"none"}
+        onKeyDown={saveBarcode} 
+        onChange={onChangeBarCode}
+      />
+      <button onClick={myFunction}>Scan Bar Code</button>
       <h2>Add Image:</h2>
       <input type="file" onChange={handleChange} />
+      <div>Heheh: {finalCode}</div>
+
       {/* <FileUploader
         handleChange={handleChange_2}
         name="file"
